@@ -21,10 +21,10 @@ import {
 function getApplicationStatusPresentation(statusValue) {
     const normalized = typeof statusValue === 'string' ? statusValue.trim().toLowerCase() : 'unknown';
     const statusLabel =
-        normalized === 'pending' ? 'In Progress' :
-        normalized === 'approved' ? 'Accepted' :
-        normalized === 'denied' ? 'Denied' :
-        'Unknown';
+        normalized === 'pending' ? 'Devam Ediyor' :
+        normalized === 'approved' ? 'Kabul Edildi' :
+        normalized === 'denied' ? 'Reddedildi' :
+        'Bilinmiyor';
     const statusEmoji =
         normalized === 'pending' ? '🟡' :
         normalized === 'approved' ? '🟢' :
@@ -38,15 +38,15 @@ export default {
     slashOnly: true,
     data: new SlashCommandBuilder()
         .setName("apply")
-        .setDescription("Manage role applications")
+        .setDescription("Rol başvurularını yönetin")
         .addSubcommand((subcommand) =>
             subcommand
                 .setName("submit")
-                .setDescription("Submit an application for a role")
+                .setDescription("Bir rol için başvuru gönderin")
                 .addStringOption((option) =>
                     option
                         .setName("application")
-                        .setDescription("The application you want to submit")
+                        .setDescription("Başvuru yapmak istediğiniz rol/başvuru adı")
                         .setRequired(true)
                         .setAutocomplete(true),
                 ),
@@ -54,25 +54,25 @@ export default {
         .addSubcommand((subcommand) =>
             subcommand
                 .setName("status")
-                .setDescription("Check the status of your application")
+                .setDescription("Başvurunuzun durumunu kontrol edin")
                 .addStringOption((option) =>
                     option
                         .setName("id")
-                        .setDescription("Application ID (leave empty to see all)")
+                        .setDescription("Başvuru ID'si (tümünü görmek için boş bırakın)")
                         .setRequired(false),
                 ),
         )
         .addSubcommand((subcommand) =>
             subcommand
                 .setName("list")
-                .setDescription("List available applications to apply for"),
+                .setDescription("Başvuru yapılabilecek mevcut rolleri listele"),
         ),
 
     category: "Community",
 
     execute: withErrorHandling(async (interaction) => {
         if (!interaction.inGuild()) {
-            return await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'This command can only be used in a server.' });
+            return await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'Bu komut yalnızca bir sunucuda kullanılabilir.' });
         }
 
         const { options, guild, member } = interaction;
@@ -83,7 +83,7 @@ export default {
             await InteractionHelper.safeDefer(interaction, { flags: isListCommand ? [] : ["Ephemeral"] });
         }
 
-        logger.info(`Apply command executed: ${subcommand}`, {
+        logger.info(`Apply komutu çalıştırıldı: ${subcommand}`, {
             userId: interaction.user.id,
             guildId: guild.id,
             subcommand
@@ -96,9 +96,9 @@ export default {
         
         if (!settings.enabled) {
             throw createError(
-                'Applications are disabled',
+                'Başvurular kapalı',
                 ErrorTypes.CONFIGURATION,
-                'Applications are currently disabled in this server.',
+                'Bu sunucuda başvurular şu anda devre dışı bırakılmıştır.',
                 { guildId: guild.id }
             );
         }
@@ -125,13 +125,13 @@ export async function handleApplicationModal(interaction) {
     const applicationRole = applicationRoles.find(appRole => appRole.roleId === roleId);
     
     if (!applicationRole) {
-        return await replyUserError(interaction, { type: ErrorTypes.CONFIGURATION, message: 'Application configuration not found.' });
+        return await replyUserError(interaction, { type: ErrorTypes.CONFIGURATION, message: 'Başvuru yapılandırması bulunamadı.' });
     }
     
     const role = interaction.guild.roles.cache.get(roleId);
     
     if (!role) {
-        return await replyUserError(interaction, { type: ErrorTypes.USER_INPUT, message: 'Role not found.' });
+        return await replyUserError(interaction, { type: ErrorTypes.USER_INPUT, message: 'Rol bulunamadı.' });
     }
     
     const answers = [];
@@ -163,10 +163,10 @@ export async function handleApplicationModal(interaction) {
         });
         
         const embed = successEmbed(
-            'Application Submitted',
-            `Your application for **${applicationRole.name}** has been submitted successfully!\n\n` +
-            `Application ID: \`${application.id}\`\n` +
-            `You can check the status with \`/apply status id:${application.id}\``
+            'Başvuru Gönderildi',
+            `**${applicationRole.name}** için başvurunuz başarıyla gönderildi!\n\n` +
+            `Başvuru ID: \`${application.id}\`\n` +
+            `Durumu kontrol etmek için: \`/apply status id:${application.id}\``
         );
         
         await InteractionHelper.safeEditReply(interaction, { embeds: [embed], flags: ["Ephemeral"] });
@@ -184,15 +184,15 @@ export async function handleApplicationModal(interaction) {
                 eventType: EVENT_TYPES.APPLICATION_SUBMIT,
                 channelId: logChannelId,
                 data: {
-                    title: 'Application Submitted',
+                    title: 'Başvuru Gönderildi',
                     lines: [
-                        formatLogLine('Applicant', `<@${interaction.user.id}> (${interaction.user.tag})`),
-                        formatLogLine('Application', applicationRole.name),
-                        formatLogLine('Role', role.name),
-                        formatLogLine('Application ID', `\`${application.id}\``),
+                        formatLogLine('Başvuran', `<@${interaction.user.id}> (${interaction.user.tag})`),
+                        formatLogLine('Başvuru', applicationRole.name),
+                        formatLogLine('Rol', role.name),
+                        formatLogLine('Başvuru ID', `\`${application.id}\``),
                     ],
                     inlineFields: [
-                        { name: 'Status', value: '🟡 In Progress', inline: true },
+                        { name: 'Durum', value: '🟡 Devam Ediyor', inline: true },
                     ],
                     author: await resolveUserAuthor(interaction.client, interaction.user.id),
                 },
@@ -207,7 +207,7 @@ export async function handleApplicationModal(interaction) {
         }
         
     } catch (error) {
-        logger.error('Error creating application:', {
+        logger.error('Başvuru oluşturulurken hata:', {
             error: error.message,
             userId: interaction.user.id,
             guildId: interaction.guild.id,
@@ -227,40 +227,40 @@ async function handleList(interaction) {
         const applicationRoles = await getApplicationRoles(interaction.client, interaction.guild.id);
         
         if (applicationRoles.length === 0) {
-            return await replyUserError(interaction, { type: ErrorTypes.USER_INPUT, message: 'No applications are currently available.' });
+            return await replyUserError(interaction, { type: ErrorTypes.USER_INPUT, message: 'Şu anda aktif başvuru bulunmuyor.' });
         }
 
         const embed = createEmbed({
-            title: "Available Applications",
-            description: "Here are the roles you can apply for:"
+            title: "Mevcut Başvurular",
+            description: "Başvuru yapabileceğiniz roller aşağıdadır:"
         });
 
         applicationRoles.forEach((appRole, index) => {
             const role = interaction.guild.roles.cache.get(appRole.roleId);
             embed.addFields({
                 name: `${index + 1}. ${appRole.name}`,
-                value: `**Role:** ${role ?`<@&${appRole.roleId}>`: 'Role not found'}\n` +
-                       `**Apply with:** \`/apply submit application:"${appRole.name}"\``,
+                value: `**Rol:** ${role ?`<@&${appRole.roleId}>`: 'Rol bulunamadı'}\n` +
+                       `**Başvuru Komutu:** \`/apply submit application:"${appRole.name}"\``,
                 inline: false
             });
         });
 
         embed.setFooter({
-            text: "Use /apply submit application:<name> to apply for any of these roles."
+            text: "Bu rollerden birine başvurmak için /apply submit application:<ad> komutunu kullanabilirsiniz."
         });
 
         return InteractionHelper.safeEditReply(interaction, { embeds: [embed] });
     } catch (error) {
-        logger.error('Error listing applications:', {
+        logger.error('Başvurular listelenirken hata:', {
             error: error.message,
             guildId: interaction.guild.id,
             stack: error.stack
         });
         
         throw createError(
-            'Failed to load applications',
+            'Başvurular yüklenemedi',
             ErrorTypes.DATABASE,
-            'Failed to load applications. Please try again later.',
+            'Başvurular yüklenemedi. Lütfen daha sonra tekrar deneyin.',
             { guildId: interaction.guild.id }
         );
     }
@@ -277,7 +277,7 @@ async function handleSubmit(interaction, settings) {
     );
 
     if (!applicationRole) {
-        return await replyUserError(interaction, { type: ErrorTypes.USER_INPUT, message: 'Use `/apply list` to see available applications.' });
+        return await replyUserError(interaction, { type: ErrorTypes.USER_INPUT, message: 'Mevcut başvuruları görmek için \`/apply list\` komutunu kullanın.' });
     }
 
     const userApps = await getUserApplications(
@@ -288,17 +288,17 @@ async function handleSubmit(interaction, settings) {
     const pendingApp = userApps.find((app) => app.status === "pending");
 
     if (pendingApp) {
-        return await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'You already have a pending application. Please wait for it to be reviewed.' });
+        return await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'Zaten bekleyen bir başvurunuz var. Lütfen sonuçlanmasını bekleyin.' });
     }
 
     const role = interaction.guild.roles.cache.get(applicationRole.roleId);
     if (!role) {
-        return await replyUserError(interaction, { type: ErrorTypes.USER_INPUT, message: 'The role for this application no longer exists.' });
+        return await replyUserError(interaction, { type: ErrorTypes.USER_INPUT, message: 'Bu başvuru için belirlenen rol artık mevcut değil.' });
     }
 
     const modal = new ModalBuilder()
         .setCustomId(`app_modal_${applicationRole.roleId}`)
-        .setTitle(`Application for ${applicationRole.name}`);
+        .setTitle(`${applicationRole.name} Başvurusu`);
 
     let questions = settings.questions?.length ? settings.questions : getDefaultApplicationQuestions();
     const roleSettings = await getApplicationRoleSettings(interaction.client, interaction.guild.id, applicationRole.roleId);
@@ -336,20 +336,20 @@ async function handleStatus(interaction) {
         );
 
         if (!application || application.userId !== interaction.user.id) {
-            return await replyUserError(interaction, { type: ErrorTypes.PERMISSION, message: 'Application not found or you do not have permission to view it.' });
+            return await replyUserError(interaction, { type: ErrorTypes.PERMISSION, message: 'Başvuru bulunamadı veya bu başvuruyu görüntüleme izniniz yok.' });
         }
 
         const submittedAt = application?.createdAt ? new Date(application.createdAt) : null;
         const submittedAtDisplay = submittedAt && !Number.isNaN(submittedAt.getTime())
             ? submittedAt.toLocaleString()
-            : 'Unknown date';
+            : 'Bilinmeyen tarih';
         const statusView = getApplicationStatusPresentation(application.status);
         const embed = createEmbed({
-            title: `Application #${application.id} - ${application.roleName || 'Unknown Role'}`,
+            title: `Başvuru #${application.id} - ${application.roleName || 'Bilinmeyen Rol'}`,
             description:
-                `**Application ID:** \`${application.id}\`\n` +
-                `**Status:** ${statusView.statusEmoji} ${statusView.statusLabel}\n` +
-                `**Submitted:** ${submittedAtDisplay}`
+                `**Başvuru ID:** \`${application.id}\`\n` +
+                `**Durum:** ${statusView.statusEmoji} ${statusView.statusLabel}\n` +
+                `**Gönderilme Tarihi:** ${submittedAtDisplay}`
         });
 
         return InteractionHelper.safeEditReply(interaction, { embeds: [embed], flags: ["Ephemeral"] });
@@ -361,7 +361,7 @@ async function handleStatus(interaction) {
         );
 
         if (applications.length === 0) {
-            return await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'You have not submitted any applications yet.' });
+            return await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'Henüz hiç başvuru göndermemişsiniz.' });
         }
 
         const recentApplications = applications
@@ -369,29 +369,29 @@ async function handleStatus(interaction) {
             .slice(0, 10);
 
         const embed = createEmbed({
-            title: "Your Applications",
-            description: `Showing ${recentApplications.length} recent application(s).`
+            title: "Başvurularınız",
+            description: `Son ${recentApplications.length} başvuru gösteriliyor.`
         });
 
         recentApplications.forEach((application) => {
             const submittedAt = application?.createdAt ? new Date(application.createdAt) : null;
             const submittedAtDisplay = submittedAt && !Number.isNaN(submittedAt.getTime())
                 ? submittedAt.toLocaleDateString()
-                : 'Unknown date';
+                : 'Bilinmeyen tarih';
             const statusView = getApplicationStatusPresentation(application.status);
 
             embed.addFields({
-                name: `${statusView.statusEmoji} ${application.roleName || 'Unknown Role'} (${statusView.statusLabel})`,
+                name: `${statusView.statusEmoji} ${application.roleName || 'Bilinmeyen Rol'} (${statusView.statusLabel})`,
                 value:
                     `**ID:** \`${application.id}\`\n` +
-                    `**Status:** ${statusView.statusEmoji} ${statusView.statusLabel}\n` +
-                    `**Submitted:** ${submittedAtDisplay}`,
+                    `**Durum:** ${statusView.statusEmoji} ${statusView.statusLabel}\n` +
+                    `**Tarih:** ${submittedAtDisplay}`,
                 inline: true,
             });
         });
 
         if (applications.length > recentApplications.length) {
-            embed.setFooter({ text: `Showing latest ${recentApplications.length} of ${applications.length} applications.` });
+            embed.setFooter({ text: `Toplam ${applications.length} başvurudan son ${recentApplications.length} tanesi gösteriliyor.` });
         }
 
         return InteractionHelper.safeEditReply(interaction, { embeds: [embed], flags: ["Ephemeral"] });
