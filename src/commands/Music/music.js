@@ -22,85 +22,85 @@ export default {
     category: 'Music',
     data: new SlashCommandBuilder()
         .setName('music')
-        .setDescription('Manage playback, queue, and voice session settings')
+        .setDescription('Oynatma, kuyruk ve ses oturumu ayarlarını yönetin')
         .addSubcommand((sub) =>
-            sub.setName('pause').setDescription('Pause playback'),
+            sub.setName('pause').setDescription('Müziği duraklatır'),
         )
         .addSubcommand((sub) =>
-            sub.setName('resume').setDescription('Resume playback'),
+            sub.setName('resume').setDescription('Duraklatılan müziği devam ettirir'),
         )
         .addSubcommand((sub) =>
-            sub.setName('skip').setDescription('Skip the current track'),
+            sub.setName('skip').setDescription('Çalan mevcut parçayı geçer'),
         )
         .addSubcommand((sub) =>
-            sub.setName('stop').setDescription('Stop playback and clear the queue'),
+            sub.setName('stop').setDescription('Müziği durdurur ve kuyruğu temizler'),
         )
         .addSubcommand((sub) =>
-            sub.setName('shuffle').setDescription('Shuffle the queue'),
+            sub.setName('shuffle').setDescription('Kuyruktaki şarkıları karıştırır'),
         )
         .addSubcommand((sub) =>
             sub
                 .setName('loop')
-                .setDescription('Set loop mode')
+                .setDescription('Döngü modunu ayarlar')
                 .addStringOption((opt) =>
                     opt
                         .setName('mode')
-                        .setDescription('Loop mode')
+                        .setDescription('Döngü modu')
                         .setRequired(true)
                         .addChoices(
-                            { name: 'Off', value: 'none' },
-                            { name: 'Track', value: 'track' },
-                            { name: 'Queue', value: 'queue' },
+                            { name: 'Kapalı', value: 'none' },
+                            { name: 'Parça', value: 'track' },
+                            { name: 'Kuyruk', value: 'queue' },
                         ),
                 ),
         )
         .addSubcommand((sub) =>
             sub
                 .setName('volume')
-                .setDescription('Set playback volume')
+                .setDescription('Oynatma ses seviyesini ayarlar')
                 .addIntegerOption((opt) =>
-                    opt.setName('level').setDescription('Volume (0-100)').setRequired(true).setMinValue(0).setMaxValue(100),
+                    opt.setName('level').setDescription('Ses Seviyesi (0-100)').setRequired(true).setMinValue(0).setMaxValue(100),
                 ),
         )
         .addSubcommand((sub) =>
             sub
                 .setName('seek')
-                .setDescription('Seek to a position in the current track')
+                .setDescription('Mevcut parçada belirli bir süreye gider')
                 .addIntegerOption((opt) =>
-                    opt.setName('seconds').setDescription('Position in seconds').setRequired(true).setMinValue(0),
+                    opt.setName('seconds').setDescription('Saniye cinsinden konum').setRequired(true).setMinValue(0),
                 ),
         )
         .addSubcommand((sub) =>
             sub
                 .setName('remove')
-                .setDescription('Remove a track from the queue')
+                .setDescription('Kuyruktan bir parça kaldırır')
                 .addIntegerOption((opt) =>
-                    opt.setName('position').setDescription('Queue position').setRequired(true).setMinValue(1),
+                    opt.setName('position').setDescription('Kuyruktaki sıra numarası').setRequired(true).setMinValue(1),
                 ),
         )
         .addSubcommand((sub) =>
             sub
                 .setName('move')
-                .setDescription('Move a track in the queue')
+                .setDescription('Kuyruktaki bir parçanın yerini değiştirir')
                 .addIntegerOption((opt) =>
-                    opt.setName('from').setDescription('Current position').setRequired(true).setMinValue(1),
+                    opt.setName('from').setDescription('Mevcut sıra numarası').setRequired(true).setMinValue(1),
                 )
                 .addIntegerOption((opt) =>
-                    opt.setName('to').setDescription('New position').setRequired(true).setMinValue(1),
+                    opt.setName('to').setDescription('Yeni sıra numarası').setRequired(true).setMinValue(1),
                 ),
         )
         .addSubcommand((sub) =>
-            sub.setName('clear').setDescription('Clear the queue'),
+            sub.setName('clear').setDescription('Kuyruğu tamamen temizler'),
         )
         .addSubcommand((sub) =>
-            sub.setName('leave').setDescription('Disconnect the bot from the voice channel'),
+            sub.setName('leave').setDescription('Botu ses kanalından çıkartır'),
         )
         .addSubcommand((sub) =>
             sub
                 .setName('247')
-                .setDescription('Toggle 24/7 mode (stay in voice channel when idle)')
+                .setDescription('7/24 modunu açar/kapatır (boşta kalındığında kanalda kalır)')
                 .addBooleanOption((opt) =>
-                    opt.setName('enabled').setDescription('Enable or disable 24/7 mode').setRequired(true),
+                    opt.setName('enabled').setDescription('7/24 modunu etkinleştir veya devre dışı bırak').setRequired(true),
                 ),
         ),
 
@@ -181,7 +181,7 @@ export default {
             }
             default:
                 await InteractionHelper.safeEditReply(interaction, {
-                    content: 'Unknown music subcommand.',
+                    content: 'Bilinmeyen müzik alt komutu.',
                 });
         }
     },
