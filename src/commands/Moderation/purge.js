@@ -8,12 +8,12 @@ import { InteractionHelper } from '../../utils/interactionHelper.js';
 import { replyUserError, ErrorTypes } from '../../utils/errorHandler.js';
 export default {
     data: new SlashCommandBuilder()
-    .setName("purge")
-    .setDescription("Delete a specific amount of messages")
+    .setName("temizle")
+    .setDescription("Belirli miktarda mesajı siler")
     .addIntegerOption((option) =>
       option
-        .setName("amount")
-        .setDescription("Number of messages (1-100)")
+        .setName("miktar")
+        .setDescription("Mesaj sayısı (1-100)")
         .setRequired(true),
     )
 .setDefaultMemberPermissions(PermissionFlagsBits.ManageMessages),
@@ -25,19 +25,19 @@ export default {
       flags: MessageFlags.Ephemeral,
     });
     if (!deferSuccess) {
-      logger.warn(`Purge interaction defer failed`, {
+      logger.warn(`Temizle komutu erteleme başarısız oldu`, {
         userId: interaction.user.id,
         guildId: interaction.guildId,
-        commandName: 'purge'
+        commandName: 'temizle'
       });
       return;
     }
 
-    const amount = interaction.options.getInteger("amount");
+    const amount = interaction.options.getInteger("miktar");
     const channel = interaction.channel;
 
     if (amount < 1 || amount > 100)
-      return await replyUserError(interaction, { type: ErrorTypes.VALIDATION, message: 'Please specify a number between 1 and 100.' });
+      return await replyUserError(interaction, { type: ErrorTypes.VALIDATION, message: 'Lütfen 1 ile 100 arasında bir sayı belirtin.' });
 
     try {
       const fetched = await channel.messages.fetch({ limit: amount });
@@ -48,10 +48,10 @@ export default {
         client,
         guild: interaction.guild,
         event: {
-          action: "Messages Purged",
-          target: `${channel} (${deletedCount} messages)`,
+          action: "Mesajlar Temizlendi",
+          target: `${channel} (${deletedCount} mesaj)`,
           executor: `${interaction.user.tag} (${interaction.user.id})`,
-          reason: `Deleted ${deletedCount} messages`,
+          reason: `${deletedCount} mesaj silindi`,
           metadata: {
             channelId: channel.id,
             messageCount: deletedCount,
@@ -64,8 +64,8 @@ export default {
       await InteractionHelper.safeEditReply(interaction, {
         embeds: [
           successEmbed(
-            "Messages Purged",
-            `Deleted ${deletedCount} messages in ${channel}.`,
+            "Mesajlar Temizlendi",
+            `${channel} kanalında ${deletedCount} mesaj silindi.`,
           ),
         ],
         flags: MessageFlags.Ephemeral,
@@ -73,12 +73,12 @@ export default {
 
       setTimeout(() => {
         interaction.deleteReply().catch(err => 
-          logger.debug('Failed to auto-delete purge response:', err)
+          logger.debug('Temizle yanıtı otomatik silinemedi:', err)
         );
       }, 3000);
     } catch (error) {
-      logger.error('Purge command error:', error);
-      await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'An unexpected error occurred during message deletion. Note: Messages older than 14 days cannot be bulk deleted.' });
+      logger.error('Temizle komutu hatası:', error);
+      await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'Mesaj silinirken beklenmeyen bir hata oluştu. Not: 14 günden eski mesajlar toplu olarak silinemez.' });
     }
   }
 };
