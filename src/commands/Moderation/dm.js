@@ -12,19 +12,19 @@ export default {
         .setDescription("Send a direct message to a user (Staff only)")
         .addUserOption(option =>
             option
-                .setName("user")
+                .setName("kullanici")
                 .setDescription("The user to send a DM to")
                 .setRequired(true)
         )
         .addStringOption(option =>
             option
-                .setName("message")
+                .setName("mesaj")
                 .setDescription("The message to send")
                 .setRequired(true)
         )
         .addBooleanOption(option =>
             option
-                .setName("anonymous")
+                .setName("gizlilik")
                 .setDescription("Send the message anonymously (default: false)")
                 .setRequired(false)
         )
@@ -43,9 +43,9 @@ export default {
             return;
         }
 
-    const targetUser = interaction.options.getUser("user");
-        const message = interaction.options.getString("message");
-        const anonymous = interaction.options.getBoolean("anonymous") || false;
+    const targetUser = interaction.options.getUser("kullanici");
+        const message = interaction.options.getString("mesaj");
+        const anonymous = interaction.options.getBoolean("gizli") || false;
 
         try {
             
