@@ -21,7 +21,7 @@ import { deferMusicCommand } from '../../services/music/prefixSupport.js';
 export default {
     category: 'Music',
     data: new SlashCommandBuilder()
-        .setName('music')
+        .setName('şarkı')
         .setDescription('Oynatma, kuyruk ve ses oturumu ayarlarını yönetin')
         .addSubcommand((sub) =>
             sub.setName('pause').setDescription('Müziği duraklatır'),
