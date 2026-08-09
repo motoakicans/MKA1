@@ -7,7 +7,7 @@ export default {
     category: 'Music',
     data: new SlashCommandBuilder()
         .setName('oynatilan')
-        .setDescription('Show the currently playing track'),
+        .setDescription('Şu an çalan şarkıyı gösterir.'),
 
     async execute(interaction, config, client) {
         await deferMusicCommand(interaction);
